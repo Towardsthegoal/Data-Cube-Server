@@ -23,9 +23,9 @@ const dataType = {
 };
 
 const setDBInfo = async (req, res) => {
-  //   const { host, username, password, port, db } = req.body;
-  //   const connectionString = `postgres://${username}:${password}@${host}:${port}/${db}`;
-  const connectionString = "postgres://postgres:password@localhost:5432/test";
+  // const { host, username, password, port, db } = req.body;
+  // const connectionString = `postgres://${username}:${password}@${host}:${port}/${db}`;
+  const connectionString = `postgres://postgres:password@localhost:5432/test`;
   pool = new Pool({ connectionString, ssl: false });
 
   pool.connect((err, client, release) => {
@@ -38,6 +38,45 @@ const setDBInfo = async (req, res) => {
       release();
     }
   });
+};
+
+const getTables = async (req, res) => {
+  try {
+    await setDBInfo();
+    const client = await pool.connect();
+    const query = `SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'public'
+      AND table_type = 'BASE TABLE'`;
+    const allTables = await client.query(query);
+    let realTables = [];
+    allTables.rows.forEach((item) => {
+      let tableName = item["table_name"];
+      if (tableName.indexOf("_map") < 0) {
+        realTables.push(tableName);
+      }
+    });
+    res.json({ data: realTables });
+  } catch (err) {
+    console.log("getTables error", err);
+  }
+};
+
+const getTableData = async (req, res) => {
+  try {
+    await setDBInfo();
+    const client = await pool.connect();
+    const { table } = req.body;
+    console.log(req)
+    const query = `SELECT *
+      FROM ${table}
+      Order By id`;
+    const tableData = await client.query(query);
+    // console.log(tableData.rows)
+    res.json({ data: tableData.rows });
+  } catch (err) {
+    console.log("getTables error", err);
+  }
 };
 
 /*
@@ -222,13 +261,13 @@ const pivot = async (req, res) => {
             // console.log("query result ", result.rows)
           }
         }
-        data.push(tmpData)
+        data.push(tmpData);
       }
     }
-    returnData["data"] = data
+    returnData["data"] = data;
 
-    console.log(returnData)
-    res.json({Return:returnData})
+    console.log(returnData);
+    res.json({ Return: returnData });
     // let factCol = "sales";
     // let factTable = "sales";
 
@@ -779,4 +818,6 @@ module.exports = {
   queryCell,
   pivot,
   leaves,
+  getTables,
+  getTableData
 };

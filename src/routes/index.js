@@ -7,6 +7,8 @@ const {
   mapData,
   queryCell,
   pivot,
+  getTables,
+  getTableData,
   leaves
 } = require("../controllers/index.controller");
 
@@ -15,6 +17,10 @@ router.post("/database", setDBInfo);
 router.get("/test", (req, res) => {
   res.json({ msg: "Data  Cube Test is running" });
 });
+
+router.post("/getTables", getTables);
+
+router.post("/getTableData", getTableData);
 
 router.post("/mapData", mapData);
 
